@@ -38,7 +38,7 @@ class EVMapView(View):
             "delete_yes_or_no"          : near_station.delete_yes_or_no,
             "delete_detail"             : near_station.delete_detail,
             "category"                  : near_station.category.type,
-            "zcode"                     : near_station.zcode.city
+            "region"                    : near_station.region.city
         } for near_station in near_stations]
 
         return JsonResponse({"results" : results}, status=200)

@@ -26,7 +26,7 @@ class Station(TimeStampModel):
     delete_yes_or_no          = models.CharField(max_length=1, choices=YesOrNo.choices, blank=True)
     delete_detail             = models.CharField(max_length=200, blank=True)
     category                  = models.ForeignKey("commons.Category", on_delete=models.PROTECT)
-    zcode                     = models.ForeignKey("commons.Region", on_delete=models.PROTECT)
+    region                    = models.ForeignKey("commons.Region", on_delete=models.PROTECT)
 
     class Meta:
         db_table = "stations"
@@ -44,10 +44,10 @@ class Charger(models.Model):
 
 
 class ChargerHistory(TimeStampModel):
-    charger_status_update_datetime = models.DateTimeField()
-    last_charging_start_datetime   = models.DateTimeField()
-    last_charging_end_datetime     = models.DateTimeField()
-    now_charging_start_datetime    = models.DateTimeField()
+    charger_status_update_datetime = models.DateTimeField(null=True)
+    last_charging_start_datetime   = models.DateTimeField(null=True)
+    last_charging_end_datetime     = models.DateTimeField(null=True)
+    now_charging_start_datetime    = models.DateTimeField(null=True)
     charging_status                = models.ForeignKey("ChargingStatus", on_delete=models.PROTECT)
     charger                        = models.ForeignKey("Charger", on_delete=models.CASCADE)
 

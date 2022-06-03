@@ -26,7 +26,7 @@ class CafeMapView(View):
             "latitude"                : near_cafe.latitude,
             "longitude"               : near_cafe.longitude,
             "category"                : near_cafe.category.type,
-            "zcode"                   : near_cafe.zcode.city
+            "region"                  : near_cafe.region.city
         } for near_cafe in near_cafes]
 
         return JsonResponse({"results" : results}, status=200)
