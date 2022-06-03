@@ -19,7 +19,7 @@ class EVMapView(View):
         
         near_stations = Station.objects.filter(rectangle_boundary)
 
-        result = [{
+        results = [{
             "id"                        : near_station.id,
             "name"                      : near_station.name,
             "detail_location"           : near_station.detail_location,
@@ -41,4 +41,4 @@ class EVMapView(View):
             "zcode"                     : near_station.zcode.city
         } for near_station in near_stations]
 
-        return JsonResponse({"result" : result}, status=200)
+        return JsonResponse({"results" : results}, status=200)

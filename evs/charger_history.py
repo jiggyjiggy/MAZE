@@ -14,8 +14,6 @@ from evs.models import ChargerHistory, Charger # Station
 def getChargerStatusAPI():
     URL = 'http://apis.data.go.kr/B552584/EvCharger/getChargerStatus'
 
-    UPDATE_PERIOD = 10
-
     region = {
         '서울' : 11,
         '경기' : 41,
@@ -24,9 +22,11 @@ def getChargerStatusAPI():
 
     MAX_SHIFT_SIZE = 10000
     totalCount     = 1e9
+    UPDATE_PERIOD  = 1
 
     item_list = []
-
+    
+    print("-----------------------------")
     print("start crawling")
     for city, zcode in region.items():
         pageNo = 0
@@ -49,6 +49,7 @@ def getChargerStatusAPI():
             response = requests.get(URL, params=params)
 
             content = response.text
+            print(content)
 
             xml = BeautifulSoup(content, "lxml-xml")
 
@@ -66,16 +67,21 @@ def getChargerStatusAPI():
 
             for item in items:
                 item_list.append({
-                    "business_id"                    : int(item.find("busiId").text.strip()),
-                    "station_id"                     : int(item.find("statId").text.strip()),
+                    "business_id"                    : item.find("busiId").text.strip(),
+                    "station_id"                     : item.find("statId").text.strip(),
                     "index_in_station"               : int(item.find("chgerId").text.strip()),
                     "charging_status"                : int(item.find("stat").text.strip()),
-                    "charger_status_update_datetime" : datetime.strptime(item.find("statUpdDt").text.strip(), '%Y%m%d%f'),
-                    "last_charging_start_datetime"   : datetime.strptime(item.find("lastTsdt").text.strip(), '%Y%m%d%f'),
-                    "last_charging_end_datetime"     : datetime.strptime(item.find("lastTedt").text.strip(), '%Y%m%d%f'),
-                    "now_charging_start_datetime"    : datetime.strptime(item.find("nowTsdt").text.strip(), '%Y%m%d%f'),  
+                    # "charger_status_update_datetime" : datetime.strptime(item.find("statUpdDt").text.strip(), '%Y%m%d%f') if item.find("statUpdDt").text else "",
+                    # "last_charging_start_datetime"   : datetime.strptime(item.find("lastTsdt").text.strip(), '%Y%m%d%f') if item.find("lastTsdt").text else "",
+                    # "last_charging_end_datetime"     : datetime.strptime(item.find("lastTedt").text.strip(), '%Y%m%d%f') if item.find("lastTedt").text else "",
+                    # "now_charging_start_datetime"    : datetime.strptime(item.find("nowTsdt").text.strip(), '%Y%m%d%f') if item.find("nowTsdt").text else "",  
+                    "charger_status_update_datetime" : item.find("statUpdDt").text.strip()[:4]+'-'+item.find("statUpdDt").text.strip()[4:6]+'-'+item.find("statUpdDt").text.strip()[6:8]+' '+item.find("statUpdDt").text.strip()[8:10]+":"+item.find("statUpdDt").text.strip()[10:12]+":"+item.find("statUpdDt").text.strip()[12:] if item.find("statUpdDt").text else None,
+                    "last_charging_start_datetime"   : item.find("lastTsdt").text.strip()[:4]+'-'+item.find("lastTsdt").text.strip()[4:6]+'-'+item.find("lastTsdt").text.strip()[6:8]+' '+item.find("lastTsdt").text.strip()[8:10]+":"+item.find("lastTsdt").text.strip()[10:12]+":"+item.find("lastTsdt").text.strip()[12:] if item.find("lastTsdt").text else None,
+                    "last_charging_end_datetime"     : item.find("lastTedt").text.strip()[:4]+'-'+item.find("lastTedt").text.strip()[4:6]+'-'+item.find("lastTedt").text.strip()[6:8]+' '+item.find("lastTedt").text.strip()[8:10]+":"+item.find("lastTedt").text.strip()[10:12]+":"+item.find("lastTedt").text.strip()[12:] if item.find("lastTedt").text else None,
+                    "now_charging_start_datetime"    : item.find("nowTsdt").text.strip()[:4]+'-'+item.find("nowTsdt").text.strip()[4:6]+'-'+item.find("nowTsdt").text.strip()[6:8]+' '+item.find("nowTsdt").text.strip()[8:10]+":"+item.find("nowTsdt").text.strip()[10:12]+":"+item.find("nowTsdt").text.strip()[12:] if item.find("nowTsdt").text else None, 
                 })
     print("end crawling")
+    print("-----------------------------")
 
     response_df = pd.DataFrame(header_list)
     ev_df       = pd.DataFrame(item_list)
@@ -85,21 +91,24 @@ def getChargerStatusAPI():
     
     return item_list
 
-getChargerStatusAPI()
+def UpdateChargerHistory():
 
-def UpdateChargerHistory(item_list):
+    item_list = getChargerStatusAPI()
+
     print("start update charger_histories table")
     for item in item_list:
         with transaction.atomic():
             # charger의 station_id는 Station field 에서 business_id 로 index 해서 찾는게 빠를수도? (나중에 해보기)
-            charger = Charger.objects.filter(station_id=item["station_id"], index_in_station=item["index_in_station"])
+            charger = Charger.objects.get(station_id=item["station_id"], index_in_station=item["index_in_station"])
 
             ChargerHistory.objects.create(
                 charger_status_update_datetime = item["charger_status_update_datetime"],
                 last_charging_start_datetime   = item["last_charging_start_datetime"],
                 last_charging_end_datetime     = item["last_charging_end_datetime"],
                 now_charging_start_datetime    = item["now_charging_start_datetime"],
-                charging_status                = item["charging_status"],
-                charger                        = charger.id
+                charging_status_id             = item["charging_status"],
+                charger_id                     = charger.id
             )
- 
+    print("-----------------------------")
+    print("UpdateChargerHistory complete")
+    print(datetime.now())
