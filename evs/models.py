@@ -44,10 +44,10 @@ class Charger(models.Model):
 
 
 class ChargerHistory(TimeStampModel):
-    charger_status_update_datetime = models.DateTimeField(null=True)
-    last_charging_start_datetime   = models.DateTimeField(null=True)
-    last_charging_end_datetime     = models.DateTimeField(null=True)
-    now_charging_start_datetime    = models.DateTimeField(null=True)
+    charger_status_update_datetime = models.DateField(null=True)
+    last_charging_start_datetime   = models.DateField(null=True)
+    last_charging_end_datetime     = models.DateField(null=True)
+    now_charging_start_datetime    = models.DateField(null=True)
     charging_status                = models.ForeignKey("ChargingStatus", on_delete=models.PROTECT)
     charger                        = models.ForeignKey("Charger", on_delete=models.CASCADE)
 
