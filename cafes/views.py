@@ -19,7 +19,7 @@ class CafeMapView(View):
         
         near_cafes = Cafe.objects.filter(rectangle_boundary)
 
-        result = [{
+        results = [{
             "land_lot_number_address" : near_cafe.land_lot_number_address,
             "road_name_address"       : near_cafe.road_name_address,
             "name"                    : near_cafe.name,
@@ -29,4 +29,4 @@ class CafeMapView(View):
             "zcode"                   : near_cafe.zcode.city
         } for near_cafe in near_cafes]
 
-        return JsonResponse({"result" : result}, status=200)
+        return JsonResponse({"results" : results}, status=200)
