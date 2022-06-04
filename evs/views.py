@@ -4,7 +4,8 @@ from django.http      import JsonResponse
 from django.views     import View
 from django.db.models import Q, Count, Case, When
 
-from evs.models import Station
+from evs.models     import Station
+from commons.models import Region
 
 
 class ChargingStatus(Enum):
@@ -97,5 +98,40 @@ class EVMapView(View):
                     "chargers_in_station" : chargers_in_station
                 }
             })
+
+        return JsonResponse({"results" : results}, status=200)
+
+
+class EVAdminView(View):
+    def get(self, request):
+        regions  = request.GET.getlist("regions", None)
+
+        if regions:
+            regions = Q(city__in = regions)
+
+        regions = Region.objects\
+            .annotate(total_charger=(Count("station__charger")))\
+            .annotate(communication_abnomal_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.communication_abnomal.value, then=True)))))\
+            .annotate(ready_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
+            .annotate(charging_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.charging.value, then=True)))))\
+            .annotate(suspending_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.suspending.value, then=True)))))\
+            .annotate(inspecting_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.inspecting.value, then=True)))))\
+            .annotate(not_confirmed_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.not_confirmed.value, then=True)))))\
+            .filter(regions)
+
+        results = [{
+            "chargers" : {
+                "region"          : region.city,
+                "count_of_status" : {
+                    "total_charger"                 : region.total_charger,
+                    "communication_abnomal_charger" : region.communication_abnomal_charger,
+                    "ready_charger"                 : region.ready_charger,
+                    "charging_charger"              : region.charging_charger,
+                    "suspending_charger"            : region.suspending_charger,
+                    "inspecting_charger"            : region.inspecting_charger,
+                    "not_confirmed_charger"         : region.not_confirmed_charger
+                }
+            }
+        } for region in regions]
 
         return JsonResponse({"results" : results}, status=200)
