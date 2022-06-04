@@ -42,62 +42,57 @@ class EVMapView(View):
             .annotate(quick_charger_of_ready=(Count(Case(When(charger__output__gte=30, charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
             .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
             .filter(rectangle_boundary)
-
-        results = []
-        for station in near_stations:
-            
-            chargers_in_station = [{
-                "id"               : charger.id,
-                "index_in_station" : charger.index_in_station,
-                "output"           : charger.output,
-                "method"           : charger.method,
-                "charger_type"     : charger.charger_type.explanation,
-                "charging_status"  : charger.chargerhistory_set.last().charging_status.explanation if charger.chargerhistory_set.exists() else ""
-            } for charger in station.charger_set.all()]
-
-            results.append({
-                "id"                        : station.id,
-                "name"                      : station.name,
-                "detail_location"           : station.detail_location,
-                "road_name_address"         : station.road_name_address,
-                "latitude"                  : station.latitude,
-                "longitude"                 : station.longitude,
-                "hours_of_operation"        : station.hours_of_operation,
-                "business_id"               : station.business_id,
-                "business_name"             : station.business_name,
-                "business_manamgement_name" : station.business_manamgement_name,
-                "business_call"             : station.business_call,
-                "parking_free_yes_or_no"    : station.parking_free_yes_or_no,
-                "parking_detail"            : station.parking_detail,
-                "limit_yes_or_no"           : station.limit_yes_or_no,
-                "limit_detail"              : station.limit_detail,
-                "delete_yes_or_no"          : station.delete_yes_or_no,
-                "delete_detail"             : station.delete_detail,
-                "category"                  : station.category.type,
-                "region"                    : station.region.city,
-                "chargers"                  : {
-                    "count_of_status"       : {
-                        "total_charger"                 : station.total_charger,
-                        "communication_abnomal_charger" : station.communication_abnomal_charger,
-                        "ready_charger"                 : station.ready_charger,
-                        "charging_charger"              : station.charging_charger,
-                        "suspending_charger"            : station.suspending_charger,
-                        "inspecting_charger"            : station.inspecting_charger,
-                        "not_confirmed_charger"         : station.not_confirmed_charger
+           
+        results = [{
+            "id"                        : station.id,
+            "name"                      : station.name,
+            "detail_location"           : station.detail_location,
+            "road_name_address"         : station.road_name_address,
+            "latitude"                  : station.latitude,
+            "longitude"                 : station.longitude,
+            "hours_of_operation"        : station.hours_of_operation,
+            "business_id"               : station.business_id,
+            "business_name"             : station.business_name,
+            "business_manamgement_name" : station.business_manamgement_name,
+            "business_call"             : station.business_call,
+            "parking_free_yes_or_no"    : station.parking_free_yes_or_no,
+            "parking_detail"            : station.parking_detail,
+            "limit_yes_or_no"           : station.limit_yes_or_no,
+            "limit_detail"              : station.limit_detail,
+            "delete_yes_or_no"          : station.delete_yes_or_no,
+            "delete_detail"             : station.delete_detail,
+            "category"                  : station.category.type,
+            "region"                    : station.region.city,
+            "chargers"                  : {
+                "count_of_status"       : {
+                    "total_charger"                 : station.total_charger,
+                    "communication_abnomal_charger" : station.communication_abnomal_charger,
+                    "ready_charger"                 : station.ready_charger,
+                    "charging_charger"              : station.charging_charger,
+                    "suspending_charger"            : station.suspending_charger,
+                    "inspecting_charger"            : station.inspecting_charger,
+                    "not_confirmed_charger"         : station.not_confirmed_charger
+                },
+                "quick_and_slow" : {
+                    "of_total_charger" : {
+                        "quick" : station.quick_charger,
+                        "slow"  : station.slow_charger
                     },
-                    "quick_and_slow" : {
-                        "of_total_charger" : {
-                            "quick" : station.quick_charger,
-                            "slow"  : station.slow_charger
-                        },
-                        "of_ready_charger" : {
-                            "quick" : station.quick_charger_of_ready,
-                            "slow"  : station.slow_charger_of_ready
-                        }
-                    },
-                    "chargers_in_station" : chargers_in_station
-                }
-            })
+                    "of_ready_charger" : {
+                        "quick" : station.quick_charger_of_ready,
+                        "slow"  : station.slow_charger_of_ready
+                    }
+                },
+                "chargers_in_station" : [{
+                    "id"               : charger.id,
+                    "index_in_station" : charger.index_in_station,
+                    "output"           : charger.output,
+                    "method"           : charger.method,
+                    "charger_type"     : charger.charger_type.explanation,
+                    "charging_status"  : charger.chargerhistory_set.last().charging_status.explanation if charger.chargerhistory_set.exists() else ""
+                } for charger in station.charger_set.all()]
+            }
+        } for station in near_stations]
 
         return JsonResponse({"results" : results}, status=200)
 
