@@ -9,9 +9,10 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
+import os
 
 from pathlib import Path
-from my_settings import SECRET_KEY, DATABASES, LOGGING
+from my_settings import SECRET_KEY, DATABASES, LOGGING, DECODED_SERVICE_KEY
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -43,7 +44,8 @@ INSTALLED_APPS = [
     'cafes',
     'evs',
     'commons',
-    'core'
+    'core',
+    'django_crontab'
 ]
 
 MIDDLEWARE = [
@@ -112,7 +114,7 @@ TIME_ZONE = 'UTC'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -154,3 +156,7 @@ CORS_ALLOW_HEADERS = (
 APPEND_SLASH = False
 
 LOGGING = LOGGING
+
+CRONJOBS = [
+    ('*/1 * * * *', 'evs.charger_history.UpdateChargerHistory', '>> '+os.path.join(BASE_DIR,'evs/crontab_charger_histories.log'+' 2>&1'))
+]
