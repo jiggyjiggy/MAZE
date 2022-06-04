@@ -99,7 +99,7 @@ class EVMapView(View):
         return JsonResponse({"results" : results}, status=200)
 
 
-class SearchNearestEV(View):
+class SearchNearestEVView(View):
     def get(self, request):
         # 1 degree of longitude = 111.19 km
         # 1 degree of latitude in seoul (longitude: 37 degree) = 88.80 km
@@ -134,7 +134,7 @@ class SearchNearestEV(View):
                 "km" : 0.1 * offset
             },
             "nearest station": {
-                    "distance"  : nearest_distance,
+                    "km"        : nearest_distance,
                     "id"        : nearest_station.id,
                     "latitude"  : nearest_station.latitude,
                     "longitude" : nearest_station.longitude
