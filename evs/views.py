@@ -1,9 +1,20 @@
+from enum import Enum
+
 from django.http      import JsonResponse
 from django.views     import View
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When
 
 from evs.models import Station
 
+
+class ChargingStatus(Enum):
+    communication_abnomal = 1
+    ready                 = 2
+    charging              = 3
+    suspending            = 4
+    inspecting            = 5
+    not_confirmed         = 9
+    
 
 class EVMapView(View):
     def get(self, request):
@@ -16,29 +27,75 @@ class EVMapView(View):
                 Q(latitude__range  = (SW_latitude, NE_latitude)) &
                 Q(longitude__range = (SW_longitude, NE_longitude))
             )
-        
-        near_stations = Station.objects.filter(rectangle_boundary)
 
-        results = [{
-            "id"                        : near_station.id,
-            "name"                      : near_station.name,
-            "detail_location"           : near_station.detail_location,
-            "road_name_address"         : near_station.road_name_address,
-            "latitude"                  : near_station.latitude,
-            "longitude"                 : near_station.longitude,
-            "hours_of_operation"        : near_station.hours_of_operation,
-            "business_id"               : near_station.business_id,
-            "business_name"             : near_station.business_name,
-            "business_manamgement_name" : near_station.business_manamgement_name,
-            "business_call"             : near_station.business_call,
-            "parking_free_yes_or_no"    : near_station.parking_free_yes_or_no,
-            "parking_detail"            : near_station.parking_detail,
-            "limit_yes_or_no"           : near_station.limit_yes_or_no,
-            "limit_detail"              : near_station.limit_detail,
-            "delete_yes_or_no"          : near_station.delete_yes_or_no,
-            "delete_detail"             : near_station.delete_detail,
-            "category"                  : near_station.category.type,
-            "region"                    : near_station.region.city
-        } for near_station in near_stations]
+        near_stations = Station.objects\
+            .annotate(total_charger=(Count("charger")))\
+            .annotate(communication_abnomal_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.communication_abnomal.value, then=True)))))\
+            .annotate(ready_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
+            .annotate(charging_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.charging.value, then=True)))))\
+            .annotate(suspending_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.suspending.value, then=True)))))\
+            .annotate(inspecting_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.inspecting.value, then=True)))))\
+            .annotate(not_confirmed_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.not_confirmed.value, then=True)))))\
+            .annotate(quick_charger=(Count(Case(When(charger__output__gte=30, then=True)))))\
+            .annotate(slow_charger=(Count(Case(When(charger__output__lt=30, then=True)))))\
+            .annotate(quick_charger_of_ready=(Count(Case(When(charger__output__gte=30, charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
+            .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
+            .filter(rectangle_boundary)
+
+        results = []
+        for station in near_stations:
+            
+            chargers_in_station = [{
+                "id"               : charger.id,
+                "index_in_station" : charger.index_in_station,
+                "output"           : charger.output,
+                "method"           : charger.method,
+                "charger_type"     : charger.charger_type.explanation,
+                "charging_status"  : charger.chargerhistory_set.last().charging_status.explanation if charger.chargerhistory_set.exists() else ""
+            } for charger in station.charger_set.all()]
+
+            results.append({
+                "id"                        : station.id,
+                "name"                      : station.name,
+                "detail_location"           : station.detail_location,
+                "road_name_address"         : station.road_name_address,
+                "latitude"                  : station.latitude,
+                "longitude"                 : station.longitude,
+                "hours_of_operation"        : station.hours_of_operation,
+                "business_id"               : station.business_id,
+                "business_name"             : station.business_name,
+                "business_manamgement_name" : station.business_manamgement_name,
+                "business_call"             : station.business_call,
+                "parking_free_yes_or_no"    : station.parking_free_yes_or_no,
+                "parking_detail"            : station.parking_detail,
+                "limit_yes_or_no"           : station.limit_yes_or_no,
+                "limit_detail"              : station.limit_detail,
+                "delete_yes_or_no"          : station.delete_yes_or_no,
+                "delete_detail"             : station.delete_detail,
+                "category"                  : station.category.type,
+                "region"                    : station.region.city,
+                "chargers"                  : {
+                    "count_of_status"       : {
+                        "total_charger"                 : station.total_charger,
+                        "communication_abnomal_charger" : station.communication_abnomal_charger,
+                        "ready_charger"                 : station.ready_charger,
+                        "charging_charger"              : station.charging_charger,
+                        "suspending_charger"            : station.suspending_charger,
+                        "inspecting_charger"            : station.inspecting_charger,
+                        "not_confirmed_charger"         : station.not_confirmed_charger
+                    },
+                    "quick_and_slow" : {
+                        "of_total_charger" : {
+                            "quick" : station.quick_charger,
+                            "slow"  : station.slow_charger
+                        },
+                        "of_ready_charger" : {
+                            "quick" : station.quick_charger_of_ready,
+                            "slow"  : station.slow_charger_of_ready
+                        }
+                    },
+                    "chargers_in_station" : chargers_in_station
+                }
+            })
 
         return JsonResponse({"results" : results}, status=200)
