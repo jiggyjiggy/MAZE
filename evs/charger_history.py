@@ -49,7 +49,6 @@ def getChargerStatusAPI():
             response = requests.get(URL, params=params)
 
             content = response.text
-            # print(content)
 
             xml = BeautifulSoup(content, "lxml-xml")
 
