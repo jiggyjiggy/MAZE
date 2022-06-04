@@ -43,9 +43,6 @@ def getChargerStatusAPI():
                 'zcode'      : zcode
             }
 
-            # print("totalCount / MAX_SHIFT_SIZE: ", (totalCount / MAX_SHIFT_SIZE))
-            # print("pageNo: ", pageNo)
-
             response = requests.get(URL, params=params)
 
             content = response.text
@@ -63,7 +60,7 @@ def getChargerStatusAPI():
                 "numOfRows"  : header.find("numOfRows").text.strip(),
             }]
             totalCount = int(header.find("totalCount").text.strip())
-            print("total_count: ",totalCount, "\n")
+
 
             for item in items:
                 item_list.append({
