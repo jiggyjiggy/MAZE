@@ -21,15 +21,23 @@ class ChargingStatus(Enum):
 
 class EVMapView(View):
     def get(self, request):
-        SW_latitude  = float(request.GET.get("SW_latitude", None))
-        SW_longitude = float(request.GET.get("SW_longitude", None)) 
-        NE_latitude  = float(request.GET.get("NE_latitude", None))
-        NE_longitude = float(request.GET.get("NE_longitude", None))
+        SW_latitude   = float(request.GET["SW_latitude"])
+        SW_longitude  = float(request.GET["SW_longitude"]) 
+        NE_latitude   = float(request.GET["NE_latitude"])
+        NE_longitude  = float(request.GET["NE_longitude"])
+        outputs       = request.GET.getlist("outputs", None)
+        charger_types = request.GET.getlist("charger_types", None)
 
-        rectangle_boundary = (
-                Q(latitude__range  = (SW_latitude, NE_latitude)) &
-                Q(longitude__range = (SW_longitude, NE_longitude))
-            )
+        q = Q()
+
+        q &= Q(latitude__range  = (SW_latitude, NE_latitude)) \
+            & Q(longitude__range = (SW_longitude, NE_longitude))
+
+        if outputs:
+            q &= Q(charger__output__in=outputs)
+
+        if charger_types:
+            q &= Q(charger__charger_type__in=charger_types)
 
         near_stations = Station.objects\
             .annotate(total_charger=(Count("charger")))\
@@ -43,7 +51,7 @@ class EVMapView(View):
             .annotate(slow_charger=(Count(Case(When(charger__output__lt=30, then=True)))))\
             .annotate(quick_charger_of_ready=(Count(Case(When(charger__output__gte=30, charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
             .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__chargerhistory__charging_status__code=ChargingStatus.ready.value, then=True)))))\
-            .filter(rectangle_boundary)
+            .filter(q)
            
         results = [{
             "id"                        : station.id,
@@ -67,7 +75,7 @@ class EVMapView(View):
             "region"                    : station.region.city,
             "chargers"                  : {
                 "count_of_status"       : {
-                    "total_charger"                 : station.chargerhistory_set.first(),
+                    "total_charger"                 : station.total_charger,
                     "communication_abnomal_charger" : station.communication_abnomal_charger,
                     "ready_charger"                 : station.ready_charger,
                     "charging_charger"              : station.charging_charger,
