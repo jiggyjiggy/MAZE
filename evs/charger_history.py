@@ -92,6 +92,8 @@ def UpdateChargerHistory():
 
     item_list = getChargerStatusAPI()
 
+    update_required = []
+
     print("\nstart update charger_histories table")
     update_start_time = datetime.now()
 
@@ -109,7 +111,11 @@ def UpdateChargerHistory():
                     charger_id                     = charger.id
                 )
             except Charger.DoesNotExist:
-                pass
+                update_required.append((item["station_id"], item["index_in_station"]))
+
+    print("Update Required")
+    print("(station_id, index_in_station)")
+    print(*update_required, sep="\n")
 
     print("\nUpdateChargerHistory complete")
     update_end_time = datetime.now()
