@@ -133,7 +133,7 @@ class SearchNearestEVView(View):
             "search_range" : {
                 "km" : 0.1 * offset
             },
-            "nearest station": {
+            "nearest_station": {
                     "km"        : nearest_distance,
                     "id"        : nearest_station.id,
                     "name"      : nearest_station.name,
