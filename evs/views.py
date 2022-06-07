@@ -67,7 +67,7 @@ class EVMapView(View):
             "region"                    : station.region.city,
             "chargers"                  : {
                 "count_of_status"       : {
-                    "total_charger"                 : station.total_charger,
+                    "total_charger"                 : station.chargerhistory_set.first(),
                     "communication_abnomal_charger" : station.communication_abnomal_charger,
                     "ready_charger"                 : station.ready_charger,
                     "charging_charger"              : station.charging_charger,
@@ -136,6 +136,7 @@ class SearchNearestEVView(View):
             "nearest station": {
                     "km"        : nearest_distance,
                     "id"        : nearest_station.id,
+                    "name"      : nearest_station.name,
                     "latitude"  : nearest_station.latitude,
                     "longitude" : nearest_station.longitude
                 }
