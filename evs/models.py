@@ -1,5 +1,17 @@
-from django.db import models
+from enum import Enum
+
+from django.db   import models
+
 from core.models import TimeStampModel
+
+
+class ChargingStatus(Enum):
+    communication_abnomal = 1
+    ready                 = 2
+    charging              = 3
+    suspending            = 4
+    inspecting            = 5
+    not_confirmed         = 9
 
 
 class Station(TimeStampModel):
@@ -48,7 +60,7 @@ class ChargerHistory(TimeStampModel):
     last_charging_start_datetime   = models.DateTimeField(null=True)
     last_charging_end_datetime     = models.DateTimeField(null=True)
     now_charging_start_datetime    = models.DateTimeField(null=True)
-    charging_status                = models.ForeignKey("ChargingStatus", on_delete=models.PROTECT)
+    charging_status                = models.ForeignKey("ChargingStatus", on_delete=models.PROTECT, default=ChargingStatus.not_confirmed.value)
     charger                        = models.ForeignKey("Charger", on_delete=models.CASCADE)
 
     class Meta:
