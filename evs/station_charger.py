@@ -12,6 +12,11 @@ from django.db   import transaction
 from evs.models import Station, Charger
 
 
+class Category(Enum):
+    COFFEESHOP = 1
+    EV         = 2
+
+
 def get_charger_info_API():
     URL = 'http://apis.data.go.kr/B552584/EvCharger/getChargerInfo'
 
@@ -152,8 +157,3 @@ def update_stations_and_chargers():
     print("update end time", update_end_time)
     print("update running time :", update_end_time - update_start_time)
     print("------------------------------------------------------------------------------------------------------")
-
-
-class Category(Enum):
-    COFFEESHOP = 1
-    EV         = 2
