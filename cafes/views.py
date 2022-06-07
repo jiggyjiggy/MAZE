@@ -9,10 +9,10 @@ from cafes.models import Cafe
 
 class CafeMapView(View):
     def get(self, request):
-        SW_latitude  = float(request.GET.get("SW_latitude", None))
-        SW_longitude = float(request.GET.get("SW_longitude", None)) 
-        NE_latitude  = float(request.GET.get("NE_latitude", None))
-        NE_longitude = float(request.GET.get("NE_longitude", None))
+        SW_latitude  = float(request.GET["SW_latitude"])
+        SW_longitude = float(request.GET["SW_longitude"]) 
+        NE_latitude  = float(request.GET["NE_latitude"])
+        NE_longitude = float(request.GET["NE_longitude"])
 
         rectangle_boundary = (
                 Q(latitude__range  = (SW_latitude, NE_latitude)) &
