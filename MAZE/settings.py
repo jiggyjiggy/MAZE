@@ -158,5 +158,6 @@ APPEND_SLASH = False
 LOGGING = LOGGING
 
 CRONJOBS = [
-    ('*/1 * * * *', 'evs.charger_history.UpdateChargerHistory', '>> '+os.path.join(BASE_DIR,'evs/crontab_charger_histories.log'+' 2>&1'))
+    ('*/1 * * * *', 'evs.charger_history.UpdateChargerHistory', '>> '+os.path.join(BASE_DIR,'evs/crontab_charger_histories.log'+' 2>&1')),
+    ("00 00 * * 7", 'evs.station_charger.update_stations_and_chargers', '>> '+os.path.join(BASE_DIR,'evs/crontab_stations_and_chargers.log'+' 2>&1'))
 ]
