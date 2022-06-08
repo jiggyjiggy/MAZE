@@ -37,7 +37,7 @@ class EVMapView(View):
             q &= Q(charger__output__in=outputs)
 
         if charger_types:
-            q &= Q(charger__charger_type__in=charger_types)
+            q &= Q(charger__charger_type__explanation__in=charger_types)
 
         near_stations = Station.objects\
             .annotate(total_charger=(Count("charger")))\
