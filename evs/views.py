@@ -17,27 +17,29 @@ class ChargingStatus(Enum):
     SUSPENDING            = 4
     INSPECTING            = 5
     NOT_CONFIRMED         = 9
-    
+
 
 class EVMapView(View):
     def get(self, request):
-        SW_latitude   = float(request.GET["SW_latitude"])
-        SW_longitude  = float(request.GET["SW_longitude"]) 
-        NE_latitude   = float(request.GET["NE_latitude"])
-        NE_longitude  = float(request.GET["NE_longitude"])
-        outputs       = request.GET.getlist("outputs", None)
-        charger_types = request.GET.getlist("charger_types", None)
+        SW_latitude      = float(request.GET["SW_latitude"])
+        SW_longitude     = float(request.GET["SW_longitude"]) 
+        NE_latitude      = float(request.GET["NE_latitude"])
+        NE_longitude     = float(request.GET["NE_longitude"])
+        outputs          = request.GET.getlist("outputs", None)
+        charger_type_ids = request.GET.get("charger_type_ids", None)
 
+        rectangle_boundary = (
+                Q(latitude__range  = (SW_latitude, NE_latitude)) &
+                Q(longitude__range = (SW_longitude, NE_longitude))
+            )
+            
         q = Q()
 
-        q &= Q(latitude__range  = (SW_latitude, NE_latitude)) \
-            & Q(longitude__range = (SW_longitude, NE_longitude))
-
         if outputs:
-            q &= Q(charger__output__in=outputs)
+            q |= Q(charger__output__in=outputs) 
 
-        if charger_types:
-            q &= Q(charger__charger_type__explanation__in=charger_types)
+        if charger_type_ids:
+            q |= Q(charger__charger_type__code__in=charger_type_ids)
 
         near_stations = Station.objects\
             .annotate(total_charger=(Count("charger")))\
@@ -51,6 +53,7 @@ class EVMapView(View):
             .annotate(slow_charger=(Count(Case(When(charger__output__lt=30, then=True)))))\
             .annotate(quick_charger_of_ready=(Count(Case(When(charger__output__gte=30, charger__chargerhistory__charging_status__code=ChargingStatus.READY.value, then=True)))))\
             .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__chargerhistory__charging_status__code=ChargingStatus.READY.value, then=True)))))\
+            .filter(rectangle_boundary)\
             .filter(q)
            
         results = [{
