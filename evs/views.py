@@ -42,20 +42,20 @@ class EVMapView(View):
             q |= Q(charger__charger_type__code__in=charger_type_ids)
 
         near_stations = Station.objects\
-            .annotate(total_charger=(Count("charger")))\
+            .annotate(total_charger=(Count("charger", distinct=True)))\
             .annotate(communication_abnomal_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True)))))\
             .annotate(ready_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.READY.value, then=True)))))\
             .annotate(charging_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.CHARGING.value, then=True)))))\
             .annotate(suspending_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.SUSPENDING.value, then=True)))))\
             .annotate(inspecting_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.INSPECTING.value, then=True)))))\
-            .annotate(not_confirmed_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.NOT_CONFIRMED.value, then=True)))))\
+            .annotate(not_confirmed_charger=(Count(Case(When(charger__chargerhistory__charging_status__code=ChargingStatus.NOT_CONFIRMED.value, then=True), When(charger__chargerhistory__charging_status=None, then=True)))))\
             .annotate(quick_charger=(Count(Case(When(charger__output__gte=30, then=True)))))\
             .annotate(slow_charger=(Count(Case(When(charger__output__lt=30, then=True)))))\
             .annotate(quick_charger_of_ready=(Count(Case(When(charger__output__gte=30, charger__chargerhistory__charging_status__code=ChargingStatus.READY.value, then=True)))))\
             .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__chargerhistory__charging_status__code=ChargingStatus.READY.value, then=True)))))\
             .filter(rectangle_boundary)\
             .filter(q)
-           
+
         results = [{
             "id"                        : station.id,
             "name"                      : station.name,
@@ -102,7 +102,7 @@ class EVMapView(View):
                     "output"           : charger.output,
                     "method"           : charger.method,
                     "charger_type"     : charger.charger_type.explanation,
-                    "charging_status"  : charger.chargerhistory_set.last().charging_status.explanation if charger.chargerhistory_set.exists() else ""
+                    "charging_status"  : charger.chargerhistory_set.last().charging_status.explanation if charger.chargerhistory_set.exists() else "상태미확인"
                 } for charger in station.charger_set.all()]
             }
         } for station in near_stations]
@@ -122,13 +122,13 @@ class SearchNearestEVView(View):
         user_position  = (user_latitude, user_longitude)
 
         nearest_station = True
-        offset          = 0
+        range          = 0
 
         while nearest_station:
-            offset += 1
+            range += 1
             search_range = (
-                    Q(latitude__range  = (user_latitude - LATITUDE_100m * offset, user_latitude + LATITUDE_100m * offset)) &
-                    Q(longitude__range = (user_longitude - LONGITUDE_100m * offset, user_longitude + LONGITUDE_100m * offset))
+                    Q(latitude__range  = (user_latitude - LATITUDE_100m * range, user_latitude + LATITUDE_100m * range)) &
+                    Q(longitude__range = (user_longitude - LONGITUDE_100m * range, user_longitude + LONGITUDE_100m * range))
                 )
 
             stations = Station.objects.filter(search_range)
@@ -142,7 +142,7 @@ class SearchNearestEVView(View):
 
         results = {
             "search_range" : {
-                "km" : 0.1 * offset
+                "km" : 0.1 * range
             },
             "nearest_station": {
                     "km"        : nearest_distance,
@@ -164,19 +164,21 @@ class EVAdminView(View):
             regions = Q(city__in = regions)
 
         regions = Region.objects\
-            .annotate(total_charger=(Count("station__charger")))\
+            .annotate(total_station=Count("station", distinct=True))\
+            .annotate(total_charger=Count("station__charger", distinct=True))\
             .annotate(communication_abnomal_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True)))))\
             .annotate(ready_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.READY.value, then=True)))))\
             .annotate(charging_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.CHARGING.value, then=True)))))\
             .annotate(suspending_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.SUSPENDING.value, then=True)))))\
             .annotate(inspecting_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.INSPECTING.value, then=True)))))\
-            .annotate(not_confirmed_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.NOT_CONFIRMED.value, then=True)))))\
+            .annotate(not_confirmed_charger=(Count(Case(When(station__charger__chargerhistory__charging_status__code=ChargingStatus.NOT_CONFIRMED.value, then=True), When(station__charger__chargerhistory__charging_status=None, then=True)))))\
             .filter(regions)
 
         results = [{
             "chargers" : {
                 "region"          : region.city,
                 "count_of_status" : {
+                    "total_station"                 : region.total_station,
                     "total_charger"                 : region.total_charger,
                     "communication_abnomal_charger" : region.communication_abnomal_charger,
                     "ready_charger"                 : region.ready_charger,
