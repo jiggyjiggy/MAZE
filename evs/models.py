@@ -50,6 +50,7 @@ class Charger(models.Model):
     method           = models.CharField(max_length=10, blank=True)
     charger_type     = models.ForeignKey("ChargerType", on_delete=models.PROTECT)
     station          = models.ForeignKey("Station", on_delete=models.CASCADE)
+    charging_status  = models.ForeignKey("ChargingStatus", on_delete=models.PROTECT, default=ChargingStatus.not_confirmed.value)
 
     class Meta:
         db_table = "chargers"

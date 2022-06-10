@@ -145,9 +145,10 @@ def update_stations_and_chargers():
                 index_in_station = item["index_in_station"],
                 station_id       = item["station_id"],
                 defaults={
-                    "output"          : item["output"],
-                    "method"          : item["method"],
-                    "charger_type_id" : item["charger_type"]
+                    "output"             : item["output"],
+                    "method"             : item["method"],
+                    "charger_type_id"    : item["charger_type"],
+                    "charging_status_id" : item["charging_status"]
                }
             )
         
