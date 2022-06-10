@@ -4,7 +4,7 @@ from haversine import haversine
 
 from django.http      import JsonResponse
 from django.views     import View
-from django.db.models import Q, Count, Case, When, F
+from django.db.models import Q, Count, Case, When
 
 from evs.models     import Station
 from commons.models import Region
