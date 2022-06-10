@@ -44,7 +44,7 @@ class Station(TimeStampModel):
         db_table = "stations"
 
 
-class Charger(models.Model):
+class Charger(TimeStampModel):
     index_in_station = models.PositiveSmallIntegerField()
     output           = models.PositiveSmallIntegerField(blank=True, null=True)
     method           = models.CharField(max_length=10, blank=True)
