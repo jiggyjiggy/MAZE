@@ -101,6 +101,8 @@ def UpdateChargerHistory():
         with transaction.atomic():
             try: 
                 charger = Charger.objects.get(station_id=item["station_id"], index_in_station=item["index_in_station"])
+                charger.charging_status_id = item["charging_status"]
+                charger.save()
 
                 ChargerHistory.objects.create(
                     charger_status_update_datetime = item["charger_status_update_datetime"],
