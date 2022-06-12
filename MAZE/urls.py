@@ -17,5 +17,6 @@ from django.urls import path, include
 
 urlpatterns = [
     path("cafes", include("cafes.urls")),
-    path("evs", include("evs.urls"))
+    path("evs", include("evs.urls")),
+    path("commons", include("commons.urls"))
 ]
