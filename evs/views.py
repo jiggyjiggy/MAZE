@@ -31,7 +31,7 @@ class EVMapView(View):
         NE_longitude     = float(request.GET["NE_longitude"])
         outputs          = request.GET.getlist("outputs", None)
         charger_type_ids = request.GET.get("charger_type_ids", None)
-        usable       = request.GET.get("usable", None)
+        usable           = request.GET.get("usable", None)
 
         rectangle_boundary = (
                 Q(latitude__range  = (SW_latitude, NE_latitude)) &
