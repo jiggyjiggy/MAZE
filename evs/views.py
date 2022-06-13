@@ -31,19 +31,24 @@ class EVMapView(View):
         NE_longitude     = float(request.GET["NE_longitude"])
         outputs          = request.GET.getlist("outputs", None)
         charger_type_ids = request.GET.get("charger_type_ids", None)
+        usable       = request.GET.get("usable", None)
 
         rectangle_boundary = (
                 Q(latitude__range  = (SW_latitude, NE_latitude)) &
                 Q(longitude__range = (SW_longitude, NE_longitude))
             )
             
-        q = Q()
+        q1 = Q()
+        q2 = Q()
 
         if outputs:
-            q |= Q(charger__output__in=outputs) 
+            q1 |= Q(charger__output__in=outputs) 
 
         if charger_type_ids:
-            q |= Q(charger__charger_type__code__in=charger_type_ids)
+            q1 |= Q(charger__charger_type__code__in=charger_type_ids)
+
+        if usable == Usable.YES.value:
+            q2 = Q(ready_charger__gte=1)
 
         near_stations = Station.objects\
             .select_related("category", "region")\
@@ -51,7 +56,7 @@ class EVMapView(View):
                     Prefetch("charger_set", queryset=Charger.objects.all().select_related("charger_type", "station", "charging_status"))
                 )\
             .filter(rectangle_boundary)\
-            .filter(q)\
+            .filter(q1)\
             .annotate(total_charger=(Count("charger")))\
             .annotate(communication_abnomal_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True)))))\
             .annotate(ready_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.READY.value, then=True)))))\
@@ -62,8 +67,8 @@ class EVMapView(View):
             .annotate(quick_charger=(Count("charger", Case(When(charger__output__gte=30, then=True)))))\
             .annotate(slow_charger=(Count("charger", Case(When(charger__output__lt=30, then=True)))))\
             .annotate(quick_charger_of_ready=(Count(Case(When(charger__output__gte=30, charger__charging_status=ChargingStatus.READY.value, then=True)))))\
-            .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__charging_status=ChargingStatus.READY.value, then=True)))))
-
+            .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__charging_status=ChargingStatus.READY.value, then=True)))))\
+            .filter(q2)
 
         results = [{
             "id"                        : station.id,
