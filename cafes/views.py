@@ -6,11 +6,8 @@ from django.db.models import Q, Prefetch
 
 from cafes.models import Cafe
 
-from core.utils import query_debugger
-
 
 class CafeMapView(View):
-    @query_debugger
     def get(self, request):
         SW_latitude  = float(request.GET["SW_latitude"])
         SW_longitude = float(request.GET["SW_longitude"]) 
@@ -40,7 +37,6 @@ class CafeMapView(View):
 
 
 class SearchNearestCafeView(View):
-    @query_debugger
     def get(self, request):
         # 1 degree of longitude = 111.19 km
         # 1 degree of latitude in seoul (longitude: 37 degree) = 88.80 km
