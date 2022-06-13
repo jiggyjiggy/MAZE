@@ -16,12 +16,12 @@ class ChargerType_(Enum):
     DC_COMBO   = 4
     AC_3SANG   = 7
 
-filtering_include_search = {
-        "DC차데모": 1356,
-        "AC완속" : 2,
-        "DC콤보": 456,
-        "AC3상": 367
-    }
+filtering_include_search = [
+        {"title" : "DC차데모", "nums" : "1,3,5,6"},
+        {"title" : "AC완속", "nums" : "2"},
+        {"title" : "DC콤보", "nums" : "4,5,6"},
+        {"title" : "AC3상", "nums" : "3,6,7"}
+    ]
 
 
 class ParentTableView(View):
@@ -46,8 +46,8 @@ class ParentTableView(View):
                 "outputs" : {
                     "unit"   : "kw",
                     "output" : [{
-                        "capacity" : charger["output"]
-                    } for charger in chargers]}
+                        "capacity" : charger["output"] 
+                    } for charger in chargers if charger["output"] != None]}
                 }
             }
 
