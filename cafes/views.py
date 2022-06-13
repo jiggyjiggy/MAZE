@@ -2,7 +2,7 @@ from haversine import haversine
 
 from django.http      import JsonResponse
 from django.views     import View
-from django.db.models import Q, Prefetch
+from django.db.models import Q
 
 from cafes.models import Cafe
 
