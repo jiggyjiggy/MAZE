@@ -19,6 +19,10 @@ class ChargingStatus(Enum):
     NOT_CONFIRMED         = 9
 
 
+class Usable(Enum):
+    YES = "YES"
+    NO  = "NO"
+
 class EVMapView(View):
     def get(self, request):
         SW_latitude      = float(request.GET["SW_latitude"])
@@ -81,6 +85,7 @@ class EVMapView(View):
             "delete_detail"             : station.delete_detail,
             "category"                  : station.category.type,
             "region"                    : station.region.city,
+            "usable"                    : Usable.YES.value if station.ready_charger else Usable.NO.value,
             "chargers"                  : {
                 "count_of_status"       : {
                     "total_charger"                 : station.total_charger,
