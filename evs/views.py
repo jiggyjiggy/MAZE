@@ -4,9 +4,9 @@ from haversine import haversine
 
 from django.http      import JsonResponse
 from django.views     import View
-from django.db.models import Q, Count, Case, When
+from django.db.models import Q, Count, Case, When, Prefetch
 
-from evs.models     import Station
+from evs.models     import Station, Charger
 from commons.models import Region
 
 
@@ -42,6 +42,10 @@ class EVMapView(View):
             q |= Q(charger__charger_type__code__in=charger_type_ids)
 
         near_stations = Station.objects\
+            .select_related("category", "region")\
+            .prefetch_related(
+                    Prefetch("charger_set", queryset=Charger.objects.all().select_related("charger_type", "station", "charging_status"))
+                )\
             .filter(rectangle_boundary)\
             .filter(q)\
             .annotate(total_charger=(Count("charger")))\
