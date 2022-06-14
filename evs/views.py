@@ -57,17 +57,17 @@ class EVMapView(View):
                 )\
             .filter(rectangle_boundary)\
             .filter(q1)\
-            .annotate(total_charger=(Count("charger")))\
-            .annotate(communication_abnomal_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True)))))\
-            .annotate(ready_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.READY.value, then=True)))))\
-            .annotate(charging_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.CHARGING.value, then=True)))))\
-            .annotate(suspending_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.SUSPENDING.value, then=True)))))\
-            .annotate(inspecting_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.INSPECTING.value, then=True)))))\
-            .annotate(not_confirmed_charger=(Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.NOT_CONFIRMED.value, then=True)))))\
-            .annotate(quick_charger=(Count("charger", Case(When(charger__output__gte=30, then=True)))))\
-            .annotate(slow_charger=(Count("charger", Case(When(charger__output__lt=30, then=True)))))\
-            .annotate(quick_charger_of_ready=(Count(Case(When(charger__output__gte=30, charger__charging_status=ChargingStatus.READY.value, then=True)))))\
-            .annotate(slow_charger_of_ready=(Count(Case(When(charger__output__lt=30, charger__charging_status=ChargingStatus.READY.value, then=True)))))\
+            .annotate(total_charger=Count("charger"))\
+            .annotate(communication_abnomal_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True))))\
+            .annotate(ready_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.READY.value, then=True))))\
+            .annotate(charging_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.CHARGING.value, then=True))))\
+            .annotate(suspending_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.SUSPENDING.value, then=True))))\
+            .annotate(inspecting_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.INSPECTING.value, then=True))))\
+            .annotate(not_confirmed_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.NOT_CONFIRMED.value, then=True))))\
+            .annotate(quick_charger=Count("charger", Case(When(charger__output__gte=30, then=True))))\
+            .annotate(slow_charger=Count("charger", Case(When(charger__output__lt=30, then=True))))\
+            .annotate(quick_charger_of_ready=Count(Case(When(charger__output__gte=30, charger__charging_status=ChargingStatus.READY.value, then=True))))\
+            .annotate(slow_charger_of_ready=Count(Case(When(charger__output__lt=30, charger__charging_status=ChargingStatus.READY.value, then=True))))\
             .filter(q2)
 
         results = [{
@@ -182,12 +182,12 @@ class EVAdminView(View):
             .filter(regions)\
             .annotate(total_station=Count("station", distinct=True))\
             .annotate(total_charger=Count("station__charger"))\
-            .annotate(communication_abnomal_charger=(Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True)))))\
-            .annotate(ready_charger=(Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.READY.value, then=True)))))\
-            .annotate(charging_charger=(Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.CHARGING.value, then=True)))))\
-            .annotate(suspending_charger=(Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.SUSPENDING.value, then=True)))))\
-            .annotate(inspecting_charger=(Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.INSPECTING.value, then=True)))))\
-            .annotate(not_confirmed_charger=(Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.NOT_CONFIRMED.value, then=True)))))
+            .annotate(communication_abnomal_charger=Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True))))\
+            .annotate(ready_charger=Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.READY.value, then=True))))\
+            .annotate(charging_charger=Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.CHARGING.value, then=True))))\
+            .annotate(suspending_charger=Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.SUSPENDING.value, then=True))))\
+            .annotate(inspecting_charger=Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.INSPECTING.value, then=True))))\
+            .annotate(not_confirmed_charger=Count("station__charger__charging_status", Case(When(station__charger__charging_status=ChargingStatus.NOT_CONFIRMED.value, then=True))))
 
         results = [{
             "chargers" : {

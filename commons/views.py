@@ -26,10 +26,10 @@ filtering_include_search = [
 
 class ParentTableView(View):
     def get(self, request):
-        regions = Region.objects.all()
-        categories = Category.objects.all()
+        regions          = Region.objects.all()
+        categories       = Category.objects.all()
         charger_statuses = ChargingStatus.objects.all()
-        chargers = Charger.objects.values("output").distinct()
+        chargers         = Charger.objects.values("output").order_by("output").distinct()
 
         results = {
             "regions" : [{ 
@@ -44,9 +44,9 @@ class ParentTableView(View):
                     "explanation" : charger_status.explanation
                 } for charger_status in charger_statuses],
                 "outputs" : {
-                    "unit"   : "kw",
                     "output" : [{
-                        "capacity" : charger["output"] 
+                        "query"    : charger["output"],
+                        "capacity" : str(charger["output"]) + "kw" 
                     } for charger in chargers if charger["output"] != None]}
                 }
             }
