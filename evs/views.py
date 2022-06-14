@@ -97,7 +97,7 @@ class EVMapView(View):
             "category"                  : station.category.type,
             "region"                    : station.region.city,
             "chargers"                  : [{
-                "usable_all"          : Usable.YES.value if target_station.ready_charger else Usable.NO.value,
+                "usable_of_all"       : Usable.YES.value if target_station.ready_charger else Usable.NO.value,
                 "usable_by_filtering" : Usable.YES.value if station.ready_charger else Usable.NO.value,
                 "count_of_status"     : {
                     "total_charger"                 : target_station.total_charger, 
