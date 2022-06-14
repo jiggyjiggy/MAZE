@@ -22,6 +22,7 @@ class ChargingStatus(Enum):
 class Usable(Enum):
     YES = "YES"
     NO  = "NO"
+    
 
 class EVMapView(View):
     def get(self, request):
@@ -57,6 +58,11 @@ class EVMapView(View):
                 )\
             .filter(rectangle_boundary)\
             .filter(q1)\
+            .annotate(ready_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.READY.value, then=True))))\
+            .filter(q2)
+
+        target_stations = Station.objects\
+            .filter(rectangle_boundary)\
             .annotate(total_charger=Count("charger"))\
             .annotate(communication_abnomal_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.COMMUNICATION_ABNOMAL.value, then=True))))\
             .annotate(ready_charger=Count("charger__charging_status", Case(When(charger__charging_status=ChargingStatus.READY.value, then=True))))\
@@ -90,25 +96,26 @@ class EVMapView(View):
             "delete_detail"             : station.delete_detail,
             "category"                  : station.category.type,
             "region"                    : station.region.city,
-            "usable"                    : Usable.YES.value if station.ready_charger else Usable.NO.value,
-            "chargers"                  : {
-                "count_of_status"       : {
-                    "total_charger"                 : station.total_charger,
-                    "communication_abnomal_charger" : station.communication_abnomal_charger,
-                    "ready_charger"                 : station.ready_charger,
-                    "charging_charger"              : station.charging_charger,
-                    "suspending_charger"            : station.suspending_charger,
-                    "inspecting_charger"            : station.inspecting_charger,
-                    "not_confirmed_charger"         : station.not_confirmed_charger,
+            "chargers"                  : [{
+                "usable_all"          : Usable.YES.value if target_station.ready_charger else Usable.NO.value,
+                "usable_by_filtering" : Usable.YES.value if station.ready_charger else Usable.NO.value,
+                "count_of_status"     : {
+                    "total_charger"                 : target_station.total_charger, 
+                    "communication_abnomal_charger" : target_station.communication_abnomal_charger,
+                    "ready_charger"                 : target_station.ready_charger,
+                    "charging_charger"              : target_station.charging_charger,
+                    "suspending_charger"            : target_station.suspending_charger,
+                    "inspecting_charger"            : target_station.inspecting_charger,
+                    "not_confirmed_charger"         : target_station.not_confirmed_charger,
                 },
                 "quick_and_slow" : {
                     "of_total_charger" : {
-                        "quick" : station.quick_charger,
-                        "slow"  : station.slow_charger
+                        "quick" : target_station.quick_charger,
+                        "slow"  : target_station.slow_charger
                     },
                     "of_ready_charger" : {
-                        "quick" : station.quick_charger_of_ready,
-                        "slow"  : station.slow_charger_of_ready
+                        "quick" : target_station.quick_charger_of_ready,
+                        "slow"  : target_station.slow_charger_of_ready
                     }
                 },
                 "chargers_in_station" : [{
@@ -119,7 +126,7 @@ class EVMapView(View):
                     "charger_type"     : charger.charger_type.explanation,
                     "charging_status"  : charger.charging_status.explanation
                 } for charger in station.charger_set.all()]
-            }
+            } for target_station in target_stations if target_station == station]
         } for station in near_stations]
 
         return JsonResponse({"results" : results}, status=200)
