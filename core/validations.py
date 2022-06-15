@@ -1,17 +1,15 @@
 from enum import Enum
 
+from haversine import haversine
+
 from django.core.exceptions import ValidationError
 
 from evs.models   import Station
 from cafes.models import Cafe
 
-class Length(Enum):
-    # 1 degree of longitude = 111.19 km
-    # 1 degree of latitude in seoul (longitude: 37 degree) = 88.80 km
-    LATITUDE_100m  = 0.0008993614533681087 
-    LONGITUDE_100m = 0.0011261261261261261
-    LATITUDE_3km   = 0.026980843601043
-    LONGITUDE_3km  = 0.033783783783784
+
+class Range(Enum):
+    limit_search = 10
 
 
 class Category(Enum):
@@ -20,38 +18,38 @@ class Category(Enum):
     
 
 def validate_range(NE_latitude, SW_latitude, NE_longitude, SW_longitude):
-    if (NE_latitude - SW_latitude > Length.LATITUDE_100m.value) or (NE_longitude - SW_longitude > Length.LONGITUDE_3km.value):
-        raise ValidationError("TOO_BIG_RANGE", code=413)
+    request_range = haversine((NE_latitude, NE_longitude), (SW_latitude, SW_longitude))
+    if request_range > Range.limit_search.value:
+        raise ValidationError("TOO_LARGE_RANGE", code=413)
 
 
 def validate_search_position(user_latitude, user_longitude, category):
     if category == Category.STATION.value:
-        stations = Station.objects.order_by("latitude", "longitude")
+        stations = Station.objects.all().order_by("latitude", "longitude")
         print(stations)
-        # MAX_LATITUDE_STATION  = stations.last("latitude").latitude
-        # MIN_LATITUDE_STATION  = stations.first("latitude").latitude
-        # MAX_LONGITUDE_STATION = stations.last("longitude").longitude
-        # MIN_LONGITUDE_STATION = stations.first("longitude").longitude
-        MAX_LATITUDE_STATION  = stations.last().latitude
-        MIN_LATITUDE_STATION  = stations.first().latitude
-        MAX_LONGITUDE_STATION = stations.last().longitude
-        MIN_LONGITUDE_STATION = stations.first().longitude
+        MAX_LATITUDE  = stations.latest("latitude").latitude
+        MIN_LATITUDE  = stations.earliest("latitude").latitude
+        MAX_LONGITUDE = stations.latest("longitude").longitude
+        MIN_LONGITUDE = stations.earliest("longitude").longitude
 
-    elif category == Category.CAFE:
-        cafes = Cafe.objects.order_by("latitude", "longitude")
-        MAX_LATITUDE_STATION  = cafes.last("latitude").latitude
-        MIN_LATITUDE_STATION  = cafes.first("latitude").latitude
-        MAX_LONGITUDE_STATION = cafes.last("longitude").longitude
-        MIN_LONGITUDE_STATION = cafes.first("longitude").longitude
+    elif category == Category.CAFE.value:
+        cafes = Cafe.objects.all().order_by("latitude", "longitude")
+        MAX_LATITUDE  = cafes.latest("latitude").latitude
+        MIN_LATITUDE  = cafes.earliest("latitude").latitude
+        MAX_LONGITUDE = cafes.latest("longitude").longitude
+        MIN_LONGITUDE = cafes.earliest("longitude").longitude
 
-    if user_latitude < MIN_LATITUDE_STATION:    
-        reposition_latitude = MIN_LATITUDE_STATION
-    elif MAX_LATITUDE_STATION < user_latitude:
-        reposition_latitude = MAX_LATITUDE_STATION
+    if (MIN_LATITUDE < user_latitude < MAX_LATITUDE) and (MIN_LONGITUDE < user_longitude < MAX_LONGITUDE):
+        return user_latitude, user_longitude
 
-    if  user_longitude < MIN_LONGITUDE_STATION:
-        reposition_longitude = MIN_LONGITUDE_STATION
-    elif MAX_LONGITUDE_STATION < user_longitude:
-        reposition_longitude = MAX_LONGITUDE_STATION
+    if user_latitude < MIN_LATITUDE:    
+        reposition_latitude = MIN_LATITUDE
+    elif MAX_LATITUDE < user_latitude:
+        reposition_latitude = MAX_LATITUDE
 
-        return reposition_latitude, reposition_longitude
+    if  user_longitude < MIN_LONGITUDE:
+        reposition_longitude = MIN_LONGITUDE
+    elif MAX_LONGITUDE < user_longitude:
+        reposition_longitude = MAX_LONGITUDE
+
+    return float(reposition_latitude), float(reposition_longitude)

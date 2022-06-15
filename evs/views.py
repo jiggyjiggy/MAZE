@@ -1,5 +1,4 @@
 from enum import Enum
-from unicodedata import category
 
 from haversine import haversine
 
@@ -32,8 +31,6 @@ class Length(Enum):
     # 1 degree of latitude in seoul (longitude: 37 degree) = 88.80 km
     LATITUDE_100m  = 0.0008993614533681087 
     LONGITUDE_100m = 0.0011261261261261261
-    LATITUDE_3km   = 0.026980843601043
-    LONGITUDE_3km  = 0.033783783783784
 
 
 class Category(Enum):
@@ -188,9 +185,6 @@ class SearchNearestEVView(View):
         nearest_station  = stations[distances.index(nearest_distance)]
 
         results = {
-            "search_range" : {
-                "km" : 0.1 * range
-            },
             "nearest_station": {
                     "km"        : nearest_distance,
                     "id"        : nearest_station.id,
