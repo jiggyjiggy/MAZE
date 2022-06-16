@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'evs',
     'commons',
     'core',
-    'django_crontab'
+    'django_crontab',
+    'sslserver'
 ]
 
 MIDDLEWARE = [
