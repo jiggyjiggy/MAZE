@@ -9,7 +9,7 @@ from cafes.models import Cafe
 
 
 class Range(Enum):
-    limit_search = 10
+    limit_search = 20
 
 
 class Category(Enum):
