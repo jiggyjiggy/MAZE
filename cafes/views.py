@@ -43,6 +43,7 @@ class CafeMapView(View):
                 .filter(rectangle_boundary)
 
             results = [{
+                "id"                      : near_cafe.id,
                 "land_lot_number_address" : near_cafe.land_lot_number_address,
                 "road_name_address"       : near_cafe.road_name_address,
                 "name"                    : near_cafe.name,
