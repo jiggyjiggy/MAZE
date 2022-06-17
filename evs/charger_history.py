@@ -22,7 +22,7 @@ def getChargerStatusAPI():
 
     MAX_SHIFT_SIZE = 10000
     totalCount     = 1e9
-    UPDATE_PERIOD  = 1
+    UPDATE_PERIOD  = 10
 
     item_list = []
     
