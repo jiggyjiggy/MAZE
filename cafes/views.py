@@ -31,7 +31,7 @@ class CafeMapView(View):
             NE_latitude  = float(request.GET["NE_latitude"])
             NE_longitude = float(request.GET["NE_longitude"])
 
-            # validate_range(NE_latitude, SW_latitude, NE_longitude, SW_longitude)
+            # validate_range(NE_latitude, SW_latitude, NE_longitude, SW_longitude)  # 프론트 이슈(첫 렌더시 range 벗어남)
 
             rectangle_boundary = (
                     Q(latitude__range  = (SW_latitude, NE_latitude)) &
