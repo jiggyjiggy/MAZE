@@ -26,7 +26,6 @@ def validate_range(NE_latitude, SW_latitude, NE_longitude, SW_longitude):
 def validate_search_position(user_latitude, user_longitude, category):
     if category == Category.STATION.value:
         stations = Station.objects.all().order_by("latitude", "longitude")
-        print(stations)
         MAX_LATITUDE  = stations.latest("latitude").latitude
         MIN_LATITUDE  = stations.earliest("latitude").latitude
         MAX_LONGITUDE = stations.latest("longitude").longitude
