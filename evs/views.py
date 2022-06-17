@@ -49,7 +49,7 @@ class EVMapView(View):
             charger_type_ids = request.GET.get("charger_type_ids", None)
             usable           = request.GET.get("usable", None)
 
-            validate_range(NE_latitude, SW_latitude, NE_longitude, SW_longitude)
+            # validate_range(NE_latitude, SW_latitude, NE_longitude, SW_longitude)
 
             rectangle_boundary = (
                     Q(latitude__range  = (SW_latitude, NE_latitude)) &
